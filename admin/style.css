@@ -1234,24 +1234,15 @@ button, input, select, textarea {
   gap: 6px;
 }
 
+.mobile-burger-btn {
+  display: none;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
 @media (max-width: 900px) {
-  .admin-shell {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-
-  .admin-sidebar {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    height: 100vh;
-  }
-
-  .admin-content {
-    padding: 20px;
-  }
-
   .panel-grid.two,
   .detail-grid,
   .mini-stat-grid {
@@ -1259,48 +1250,109 @@ button, input, select, textarea {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .admin-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
     display: block;
   }
 
-  .admin-sidebar,
-  .sidebar-collapsed .admin-sidebar {
+  .admin-main {
+    margin-left: 0 !important;
     width: 100%;
-    height: auto;
-    position: relative;
-  }
-
-  .sidebar-brand {
-    min-height: 60px;
-  }
-
-  .sidebar-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 8px;
-  }
-
-  .sidebar-link {
-    width: auto;
-    min-width: 44px;
-  }
-
-  .sidebar-account {
-    display: none;
-  }
-
-  .sidebar-collapsed .brand-text,
-  .sidebar-collapsed .sidebar-link span {
-    display: inline;
-  }
-
-  .sidebar-collapsed .sidebar-toggle {
-    margin-left: auto;
+    display: block;
   }
 
   .admin-content {
-    padding: 18px 14px;
+    padding: 76px 16px 20px 16px !important;
+  }
+
+  .admin-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    width: 260px !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1) !important;
+    z-index: 1000 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .sidebar-collapsed .admin-sidebar {
+    width: 260px !important;
+    transform: translateX(-100%) !important;
+  }
+
+  /* Tampilkan tulisan di sidebar saat di mobile walau class collapsed (agar tetap terbaca penuh ketika dibuka) */
+  .sidebar-collapsed .brand-text,
+  .sidebar-collapsed .account-text,
+  .sidebar-collapsed .sidebar-link span,
+  .sidebar-collapsed .logout-btn span {
+    display: block !important;
+  }
+
+  .sidebar-collapsed .sidebar-toggle {
+    display: none !important;
+  }
+
+  .sidebar-collapsed .sidebar-brand,
+  .sidebar-collapsed .sidebar-account {
+    padding-right: 16px !important;
+    padding-left: 16px !important;
+  }
+
+  .sidebar-collapsed .sidebar-link,
+  .sidebar-collapsed .logout-btn {
+    justify-content: flex-start !important;
+  }
+
+  .admin-shell.sidebar-open .admin-sidebar {
+    transform: translateX(0) !important;
+  }
+
+  .mobile-burger-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 998;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .mobile-burger-btn:hover {
+    background: #1e293b;
+  }
+
+  .mobile-burger-btn:active {
+    transform: scale(0.95);
+  }
+
+  .sidebar-overlay {
+    display: none;
+  }
+
+  .admin-shell.sidebar-open .sidebar-overlay {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 999;
   }
 
   .page-head {

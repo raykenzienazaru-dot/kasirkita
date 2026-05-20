@@ -312,7 +312,11 @@ function render() {
   }
 
   root.innerHTML = `
-    <div class="admin-shell ${state.sidebarOpen ? "" : "sidebar-collapsed"}">
+    <div class="admin-shell ${state.sidebarOpen ? "sidebar-open" : "sidebar-collapsed"}">
+      <button class="mobile-burger-btn" data-action="toggle-sidebar" aria-label="Toggle Sidebar">
+        <i class="ti ti-menu-2"></i>
+      </button>
+      <div class="sidebar-overlay" data-action="toggle-sidebar"></div>
       ${renderSidebar()}
       <main class="admin-main">
         <section class="admin-content">

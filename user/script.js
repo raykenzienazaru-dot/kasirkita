@@ -82,6 +82,23 @@ const defaultBarang = [
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   checkSession();
+
+  // Mobile sidebar toggle handler
+  document.addEventListener('click', e => {
+    const burger = document.getElementById('mobile-burger-btn');
+    const overlay = document.getElementById('sidebar-overlay');
+    const sidebar = document.getElementById('sidebar');
+
+    if (!sidebar || !burger || !overlay) return;
+
+    if (e.target.closest('#mobile-burger-btn') || e.target.closest('#sidebar-overlay')) {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('active');
+    } else if (!e.target.closest('#sidebar') && sidebar.classList.contains('open')) {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+    }
+  });
 });
 
 function initApp() {
@@ -156,6 +173,14 @@ function showPage(name) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   document.getElementById('nav-' + name).classList.add('active');
+
+  // Close mobile sidebar if open
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar && sidebar.classList.contains('open')) {
+    sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+  }
   
   if (name === 'history' || name === 'laporan') {
     if (window.supabaseClient) {
