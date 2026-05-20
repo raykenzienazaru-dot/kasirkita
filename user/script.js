@@ -87,6 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function initApp() {
   updateDate();
   refreshBarangAdmin(false);
+  if (window.supabaseClient) {
+    loadTransactionsFromSupabase().then(() => {
+      updateBadge();
+    });
+  }
   renderQuickCash();
   loadSettings();
   updateBadge();
@@ -103,13 +108,66 @@ function updateDate() {
 }
 
 // ===== NAVIGATION =====
+async function loadTransactionsFromSupabase() {
+  if (!window.supabaseClient) return false;
+  try {
+    const { data, error } = await window.supabaseClient
+      .from('transactions')
+      .select('*, transaction_items(*)')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      riwayat = data.map(trx => ({
+        id: trx.trx_number || trx.id,
+        tanggal: trx.created_at,
+        subtotal: trx.subtotal_amount,
+        manualDiskon: trx.manual_discount_amount,
+        autoDiskon: trx.auto_discount_amount,
+        diskon: trx.manual_discount_amount + trx.auto_discount_amount,
+        ppn: trx.ppn_amount,
+        total: trx.total_amount,
+        metode: trx.payment_method,
+        bank: trx.payment_bank,
+        uangDiterima: trx.uang_received || trx.total_amount,
+        kembalian: trx.change_amount || 0,
+        catatan: trx.notes,
+        kasir: trx.created_by,
+        items: (trx.transaction_items || []).map(item => ({
+          id: item.product_id,
+          kode: item.product_code,
+          nama: item.product_name,
+          harga: item.unit_price,
+          jumlah: item.quantity,
+          subtotal: item.line_subtotal,
+          kategori: item.product_category || 'Lainnya'
+        }))
+      }));
+      updateBadge();
+      return true;
+    }
+  } catch (err) {
+    console.error("Error loadTransactionsFromSupabase:", err);
+  }
+  return false;
+}
+
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   document.getElementById('nav-' + name).classList.add('active');
-  if (name === 'history') renderHistory();
-  if (name === 'laporan') renderLaporan();
+  
+  if (name === 'history' || name === 'laporan') {
+    if (window.supabaseClient) {
+      loadTransactionsFromSupabase().then(() => {
+        if (name === 'history') renderHistory();
+        if (name === 'laporan') renderLaporan();
+      });
+    } else {
+      if (name === 'history') renderHistory();
+      if (name === 'laporan') renderLaporan();
+    }
+  }
   return false;
 }
 
@@ -144,11 +202,41 @@ function saveBarangAdmin() {
   localStorage.setItem('barang', JSON.stringify(daftarBarang));
 }
 
-function refreshBarangAdmin(showMessage = true) {
+async function refreshBarangAdmin(showMessage = true) {
+  if (window.supabaseClient) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+      if (!error && data) {
+        daftarBarang = data.map((item, index) => ({
+          id: item.id,
+          kode: item.code || `BRG-${index + 1}`,
+          nama: item.name,
+          harga: item.price,
+          kategori: item.category || 'Lainnya',
+          stok: item.stock || 0
+        }));
+        renderKategoriBarang();
+        renderProductCatalog();
+        if (showMessage) showToast('Data barang dari Supabase berhasil sinkron', 'success');
+        return;
+      } else if (error) {
+        console.warn("Gagal sinkron produk dengan Supabase:", error.message);
+      }
+    } catch (err) {
+      console.error("Error refreshBarangAdmin:", err);
+    }
+  }
+
+  // Fallback
   daftarBarang = loadBarangAdmin();
   renderKategoriBarang();
   renderProductCatalog();
-  if (showMessage) showToast('Data barang dari admin diperbarui', 'success');
+  if (showMessage) showToast('Gagal terhubung Supabase. Menggunakan data demo offline.', 'info');
 }
 
 function renderKategoriBarang() {
@@ -508,7 +596,7 @@ function generateQR() {
 }
 
 // ===== PROSES TRANSAKSI =====
-function prosesTransaksi() {
+async function prosesTransaksi() {
   if (daftarBelanja.length === 0) { showToast('Keranjang masih kosong!', 'error'); return; }
 
   const subtotal = getSubtotal();
@@ -527,9 +615,12 @@ function prosesTransaksi() {
   const stockError = validasiStokKeranjang();
   if (stockError) { showToast(stockError, 'error'); return; }
 
+  const trxTimestamp = new Date().toISOString();
+  const tempTrxNumber = `TRX-${Date.now().toString().slice(-8)}`;
+
   const trx = {
-    id: noTransaksi,
-    tanggal: new Date().toISOString(),
+    id: tempTrxNumber,
+    tanggal: trxTimestamp,
     items: [...daftarBelanja],
     subtotal,
     manualDiskon,
@@ -545,22 +636,126 @@ function prosesTransaksi() {
     kasir: currentUser ? currentUser.displayName : (settings.kasirName || 'Anonymous')
   };
 
-  kurangiStokBarang();
+  let transactionSaved = false;
 
-  riwayat.unshift(trx);
-  localStorage.setItem('riwayat', JSON.stringify(riwayat));
-  localStorage.setItem('noTrx', String(noTransaksi + 1));
-  noTransaksi++;
+  // 1. Simpan Transaksi ke Supabase Database
+  if (window.supabaseClient) {
+    try {
+      showToast('Menyimpan ke Supabase...', 'info');
+      // Insert Transaction Header
+      const { data: trxData, error: trxError } = await window.supabaseClient
+        .from('transactions')
+        .insert([{
+          trx_number: tempTrxNumber,
+          created_by: trx.kasir,
+          customer_name: 'Siswa/Umum',
+          payment_method: trx.metode,
+          payment_bank: trx.bank,
+          payment_status: 'paid',
+          subtotal_amount: trx.subtotal,
+          manual_discount_amount: trx.manualDiskon,
+          auto_discount_amount: trx.autoDiskon,
+          ppn_amount: trx.ppn,
+          total_amount: trx.total,
+          notes: trx.catatan,
+          created_at: trx.tanggal
+        }])
+        .select();
+
+      if (!trxError && trxData && trxData.length > 0) {
+        const dbTrxId = trxData[0].id;
+        trx.id = dbTrxId; // Gunakan UUID transaksi asli dari database
+        trx.trxNumber = trxData[0].trx_number;
+
+        // Insert Transaction Items
+        const itemsToInsert = daftarBelanja.map(item => ({
+          transaction_id: dbTrxId,
+          product_id: (typeof item.id === 'string' && item.id.length > 20) ? item.id : null,
+          product_code: item.kode,
+          product_name: item.nama,
+          product_category: item.kategori,
+          unit_price: item.harga,
+          quantity: item.jumlah,
+          line_subtotal: item.subtotal
+        }));
+
+        const { error: itemsError } = await window.supabaseClient
+          .from('transaction_items')
+          .insert(itemsToInsert);
+
+        if (!itemsError) {
+          // Kurangi stok barang di Supabase
+          for (const item of daftarBelanja) {
+            if (typeof item.id === 'string' && item.id.length > 20) {
+              const { data: prodData } = await window.supabaseClient
+                .from('products')
+                .select('stock')
+                .eq('id', item.id)
+                .single();
+
+              if (prodData) {
+                const newStock = Math.max(0, (prodData.stock || 0) - item.jumlah);
+                await window.supabaseClient
+                  .from('products')
+                  .update({ stock: newStock })
+                  .eq('id', item.id);
+              }
+            }
+          }
+
+          // Catat Riwayat Stok
+          const stockHistories = daftarBelanja.map(item => ({
+            product_id: (typeof item.id === 'string' && item.id.length > 20) ? item.id : null,
+            product_code: item.kode,
+            product_name: item.nama,
+            change_qty: -item.jumlah,
+            reason: 'transaction',
+            ref_transaction_id: dbTrxId,
+            notes: 'Penjualan Kasir'
+          }));
+
+          await window.supabaseClient
+            .from('stock_history')
+            .insert(stockHistories);
+
+          transactionSaved = true;
+          console.log("Transaksi berhasil disimpan di Supabase:", dbTrxId);
+        } else {
+          console.error("Gagal menyimpan item transaksi di Supabase:", itemsError.message);
+        }
+      } else {
+        if (trxError) console.error("Gagal menyimpan header transaksi di Supabase:", trxError.message);
+      }
+    } catch (err) {
+      console.error("Error proses transaksi Supabase:", err);
+    }
+  }
+
+  // 2. Offline local fallback jika Supabase gagal atau tidak aktif
+  if (!transactionSaved) {
+    kurangiStokBarang();
+    trx.id = noTransaksi;
+    riwayat.unshift(trx);
+    localStorage.setItem('riwayat', JSON.stringify(riwayat));
+    localStorage.setItem('noTrx', String(noTransaksi + 1));
+    noTransaksi++;
+    showToast('Transaksi berhasil disimpan secara lokal (Offline)', 'info');
+  } else {
+    // Transaksi di Supabase sukses, perbarui katalog produk real-time
+    await refreshBarangAdmin(false);
+    // Tambahkan transaksi ke riwayat lokal di session/memori untuk display instan
+    riwayat.unshift(trx);
+    showToast('Transaksi berhasil diproses via Supabase!', 'success');
+  }
 
   tampilkanStruk(trx);
   updateBadge();
-  showToast('Transaksi berhasil', 'success');
 }
 
 function validasiStokKeranjang() {
   for (const item of daftarBelanja) {
     const product = daftarBarang.find(barang => String(barang.id) === String(item.id));
-    if (!product) return `${item.nama} tidak ada di data admin`;
+    if (!product) return `${item.nama} tidak ada di data katalog`;
     if (item.jumlah > Number(product.stok || 0)) return `Stok ${item.nama} tersisa ${product.stok}`;
   }
   return '';

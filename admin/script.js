@@ -190,6 +190,75 @@ function saveItems() {
 // ===== RENDER CORE =====
 document.addEventListener("DOMContentLoaded", initAdmin);
 
+async function syncItemsFromSupabase() {
+  if (!window.supabaseClient) return;
+  try {
+    const { data, error } = await window.supabaseClient
+      .from('products')
+      .select('*')
+      .eq('is_active', true)
+      .order('name', { ascending: true });
+
+    if (!error && data) {
+      state.items = data.map(item => ({
+        id: item.id,
+        nama: item.name,
+        harga: item.price,
+        kategori: item.category || 'Lainnya',
+        stok: item.stock || 0,
+        kode: item.code
+      }));
+      render();
+    } else if (error) {
+      console.warn("Gagal sinkron barang dari Supabase:", error.message);
+    }
+  } catch (err) {
+    console.error("Error syncItemsFromSupabase:", err);
+  }
+}
+
+async function syncTransactionsFromSupabase() {
+  if (!window.supabaseClient) return;
+  try {
+    const { data, error } = await window.supabaseClient
+      .from('transactions')
+      .select('*, transaction_items(*)')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      state.trxs = data.map(trx => ({
+        id: trx.trx_number || trx.id,
+        tanggal: trx.created_at,
+        subtotal: trx.subtotal_amount,
+        manualDiskon: trx.manual_discount_amount,
+        autoDiskon: trx.auto_discount_amount,
+        diskon: trx.manual_discount_amount + trx.auto_discount_amount,
+        ppn: trx.ppn_amount,
+        total: trx.total_amount,
+        metode: trx.payment_method,
+        bank: trx.payment_bank,
+        uangDiterima: trx.total_amount,
+        kembalian: 0,
+        catatan: trx.notes,
+        kasir: trx.created_by,
+        items: (trx.transaction_items || []).map(item => ({
+          nama: item.product_name,
+          harga: item.unit_price,
+          jumlah: item.quantity,
+          subtotal: item.line_subtotal,
+          kategori: item.product_category || 'Lainnya',
+          kode: item.product_code
+        }))
+      }));
+      render();
+    } else if (error) {
+      console.warn("Gagal sinkron riwayat dari Supabase:", error.message);
+    }
+  } catch (err) {
+    console.error("Error syncTransactionsFromSupabase:", err);
+  }
+}
+
 function initAdmin() {
   state.currentUser = loadCurrentUser();
 
@@ -198,10 +267,17 @@ function initAdmin() {
     return;
   }
 
+  // Load offline data as fallback/initial
   state.trxs = loadTransactions();
   state.items = loadItems();
   state.qrReady = Boolean(window.JsBarcode);
   render();
+
+  // Jalankan sinkronisasi Supabase jika aktif
+  if (window.supabaseClient) {
+    syncItemsFromSupabase();
+    syncTransactionsFromSupabase();
+  }
 
   if (!state.qrReady) {
     waitForQrLibrary();
@@ -836,7 +912,7 @@ function openEditItem(id) {
   render();
 }
 
-function submitBarangForm(form) {
+async function submitBarangForm(form) {
   const nama = form.nama.value.trim();
   const kategori = form.kategori.value;
   const harga = Number(form.harga.value);
@@ -855,27 +931,114 @@ function submitBarangForm(form) {
     return;
   }
 
-  if (state.editingItemId) {
-    state.items = state.items.map((item) => String(item.id) === String(state.editingItemId)
-      ? { ...item, nama, kategori, harga, stok, kode: item.kode || createItemCode(nama) }
-      : item);
-    showToast("Barang diperbarui");
-  } else {
-    state.items = [...state.items, { id: Date.now(), nama, kategori, harga, stok, kode: createItemCode(nama) }];
-    showToast("Barang baru ditambahkan");
+  let success = false;
+
+  if (window.supabaseClient) {
+    try {
+      showToast("Menyimpan ke Supabase...", "info");
+      if (state.editingItemId) {
+        // Update product in Supabase
+        const { error } = await window.supabaseClient
+          .from('products')
+          .update({
+            name: nama,
+            category: kategori,
+            price: harga,
+            stock: stok
+          })
+          .eq('id', state.editingItemId);
+
+        if (!error) {
+          showToast("Barang diperbarui di Supabase");
+          success = true;
+        } else {
+          console.error("Gagal update barang di Supabase:", error.message);
+          showToast(error.message, "error");
+        }
+      } else {
+        // Insert product into Supabase
+        const { error } = await window.supabaseClient
+          .from('products')
+          .insert([{
+            code: createItemCode(nama),
+            name: nama,
+            category: kategori,
+            price: harga,
+            stock: stok,
+            is_active: true
+          }]);
+
+        if (!error) {
+          showToast("Barang baru ditambahkan ke Supabase");
+          success = true;
+        } else {
+          console.error("Gagal tambah barang di Supabase:", error.message);
+          showToast(error.message, "error");
+        }
+      }
+
+      if (success) {
+        await syncItemsFromSupabase();
+      }
+    } catch (err) {
+      console.error("Error submitBarangForm Supabase:", err);
+    }
   }
 
-  saveItems();
+  // Fallback ke offline demo jika Supabase gagal/tidak aktif
+  if (!success) {
+    if (state.editingItemId) {
+      state.items = state.items.map((item) => String(item.id) === String(state.editingItemId)
+        ? { ...item, nama, kategori, harga, stok, kode: item.kode || createItemCode(nama) }
+        : item);
+      showToast("Barang diperbarui secara lokal (Offline)");
+    } else {
+      state.items = [...state.items, { id: Date.now(), nama, kategori, harga, stok, kode: createItemCode(nama) }];
+      showToast("Barang baru ditambahkan secara lokal (Offline)");
+    }
+    saveItems();
+  }
+
   state.barangModalOpen = false;
   state.editingItemId = null;
   render();
 }
 
-function deleteItem(id) {
+async function deleteItem(id) {
   if (!confirm("Hapus barang ini?")) return;
-  state.items = state.items.filter((item) => String(item.id) !== String(id));
-  saveItems();
-  showToast("Barang dihapus", "error");
+
+  let success = false;
+
+  if (window.supabaseClient) {
+    try {
+      showToast("Menghapus dari Supabase...", "info");
+      // Soft-delete: update is_active = false
+      const { error } = await window.supabaseClient
+        .from('products')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (!error) {
+        showToast("Barang dihapus dari Supabase", "error");
+        success = true;
+        await syncItemsFromSupabase();
+      } else {
+        console.error("Gagal hapus barang di Supabase:", error.message);
+        showToast(error.message, "error");
+      }
+    } catch (err) {
+      console.error("Error deleteItem Supabase:", err);
+    }
+  }
+
+  // Fallback offline
+  if (!success) {
+    state.items = state.items.filter((item) => String(item.id) !== String(id));
+    saveItems();
+    showToast("Barang dihapus secara lokal (Offline)", "error");
+  }
+
+  render();
 }
 
 // ===== HISTORY PEMBAYARAN =====

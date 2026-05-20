@@ -70,7 +70,7 @@ function showLoginError(msg) {
   el.classList.add('show');
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
   e.preventDefault();
   const username = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value;
@@ -81,37 +81,89 @@ function handleLogin(e) {
     showLoginError('Username dan password harus diisi!');
     return;
   }
-  
-  // Login dengan default credentials sebagai fallback/development
-  const cred = credentials[selectedRole];
-  if (username !== cred.username || password !== cred.password) {
-    showLoginError('Username atau password salah!');
-    return;
-  }
 
-  // Success — animate
   btnLogin.classList.add('loading');
   btnLogin.innerHTML = '<span>Memverifikasi...</span>';
 
-  setTimeout(() => {
-    const currentUser = {
-      role: selectedRole,
-      username: username,
-      displayName: cred.displayName,
-      roleName: cred.roleName
-    };
+  let loginSuccess = false;
+  let currentUser = null;
+  let errorMsg = 'Username atau password salah!';
 
+  // 1. Coba login menggunakan Supabase Auth
+  if (window.supabaseClient) {
+    try {
+      const email = username.includes('@') ? username : `${username}@kasirkita.com`;
+      const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (!error && data.user) {
+        const metadata = data.user.user_metadata || {};
+        // Ambil data role dan profile dari metadata Supabase
+        const userRole = metadata.role || selectedRole;
+        
+        currentUser = {
+          role: userRole,
+          username: username,
+          displayName: metadata.displayName || (userRole === 'admin' ? 'Administrator' : 'Kasir'),
+          roleName: metadata.roleName || (userRole === 'admin' ? 'Admin — Manajemen Penuh' : 'Kasir / Petugas'),
+          token: data.session?.access_token
+        };
+
+        // Pastikan role yang dipilih sesuai dengan role user di Supabase
+        if (userRole !== selectedRole) {
+          errorMsg = `Peran tidak sesuai! Akun ini terdaftar sebagai ${userRole.toUpperCase()}.`;
+          loginSuccess = false;
+        } else {
+          loginSuccess = true;
+          console.log("Login Supabase berhasil:", currentUser);
+        }
+      } else {
+        if (error) {
+          errorMsg = error.message;
+          console.warn("Supabase auth error:", error.message);
+        }
+      }
+    } catch (err) {
+      console.error("Gagal menghubungkan ke Supabase Auth:", err);
+    }
+  }
+
+  // 2. Fallback ke kredensial lokal/demo offline jika Supabase gagal atau tidak aktif
+  if (!loginSuccess) {
+    const cred = credentials[selectedRole];
+    if (username === cred.username && password === cred.password) {
+      currentUser = {
+        role: selectedRole,
+        username: username,
+        displayName: cred.displayName,
+        roleName: cred.roleName,
+        isOfflineDemo: true
+      };
+      loginSuccess = true;
+      console.log("Login demo lokal berhasil (offline fallback).");
+    }
+  }
+
+  if (loginSuccess && currentUser) {
     // Save session
     sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
     // Transition
-    const loginScreen = document.getElementById('login-screen');
-    loginScreen.classList.add('hiding');
-
     setTimeout(() => {
-      goToDashboard(selectedRole); // Pindah ke halaman sesuai role
-    }, 500);
-  }, 800);
+      const loginScreen = document.getElementById('login-screen');
+      if (loginScreen) loginScreen.classList.add('hiding');
+
+      setTimeout(() => {
+        goToDashboard(currentUser.role); // Pindah ke halaman sesuai role
+      }, 500);
+    }, 400);
+  } else {
+    btnLogin.classList.remove('loading');
+    btnLogin.innerHTML = '<span>Masuk Sekarang</span><span class="login-arrow" aria-hidden="true">→</span>';
+    showLoginError(errorMsg);
+  }
 }
 
 // Cek apakah sudah login saat di halaman login
