@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Kasirkita</title>
+    <meta name="description" content="Masuk ke aplikasi kasir sekolah modern.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-bg-grid" aria-hidden="true"></div>
+        <div class="login-bg-panels" aria-hidden="true">
+            <span class="panel panel-1"></span>
+            <span class="panel panel-2"></span>
+            <span class="panel panel-3"></span>
+        </div>
+
+        <div class="login-container">
+            <div class="login-card">
+                <section class="login-hero" aria-label="Kasirkita overview">
+                    <div class="brand-lockup">
+                        <div class="login-logo-icon" aria-hidden="true">🏪</div>
+                        <div>
+                            <h1 class="login-brand">Kasirkita</h1>
+                            <p class="login-tagline">Sekolah Edition Point of Sale</p>
+                        </div>
+                    </div>
+
+                    <div class="hero-copy">
+                        <p class="hero-kicker">Sistem Kasir Sekolah</p>
+                        <h2>Kelola transaksi kantin dengan cepat, rapi, dan modern.</h2>
+                        <p>Masuk sesuai peran untuk mulai mencatat penjualan, melihat laporan, dan menjaga operasional tetap tertata.</p>
+                    </div>
+
+                    <div class="dashboard-preview" aria-hidden="true">
+                        <div class="preview-topbar">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <div class="preview-body">
+                            <div class="preview-summary">
+                                <span>Transaksi Hari Ini</span>
+                                <strong>Rp 1.250.000</strong>
+                            </div>
+                            <div class="preview-chart">
+                                <span style="height: 42%"></span>
+                                <span style="height: 78%"></span>
+                                <span style="height: 58%"></span>
+                                <span style="height: 88%"></span>
+                                <span style="height: 66%"></span>
+                            </div>
+                            <div class="preview-list">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-stats" aria-label="Ringkasan aplikasi">
+                        <div>
+                            <strong>2</strong>
+                            <span>Mode akses</span>
+                        </div>
+                        <div>
+                            <strong>24/7</strong>
+                            <span>Siap pakai</span>
+                        </div>
+                        <div>
+                            <strong>POS</strong>
+                            <span>Kasir sekolah</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="login-panel" aria-label="Form login">
+                    <div class="login-panel-head">
+                        <p class="panel-kicker">Selamat datang</p>
+                        <h2>Masuk ke dashboard</h2>
+                        <p>Pilih peran, lalu gunakan akun yang sudah disiapkan.</p>
+                    </div>
+
+                    <!-- Role Selector -->
+                    <div class="role-selector">
+                        <div class="role-label">Masuk Sebagai</div>
+                        <div class="role-tabs">
+                            <button type="button" class="role-tab active" id="role-user" aria-pressed="true" onclick="selectRole('user')">
+                                <span class="role-icon" aria-hidden="true">👤</span>
+                                <span class="role-name">User</span>
+                                <span class="role-desc">Kasir / Petugas</span>
+                            </button>
+                            <button type="button" class="role-tab" id="role-admin" aria-pressed="false" onclick="selectRole('admin')">
+                                <span class="role-icon" aria-hidden="true">🛡️</span>
+                                <span class="role-name">Admin</span>
+                                <span class="role-desc">Manajemen Penuh</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form class="login-form" id="login-form" onsubmit="handleLogin(event)">
+                        <div class="login-field">
+                            <label for="login-username">Username</label>
+                            <div class="field-wrapper">
+                                <span class="field-icon" aria-hidden="true">👤</span>
+                                <input type="text" id="login-username" name="username" placeholder="Masukkan username" autocomplete="username" required>
+                            </div>
+                        </div>
+                        <div class="login-field">
+                            <label for="login-password">Password</label>
+                            <div class="field-wrapper">
+                                <span class="field-icon" adminaria-hidden="true">🔒</span>
+                                <input type="password" id="login-password" name="password" placeholder="Masukkan password" autocomplete="current-password" required>
+                                <button type="button" class="toggle-pass" id="toggle-pass" aria-label="Tampilkan password" onclick="togglePassword()">👁️</button>
+                            </div>
+                        </div>
+
+                        <div class="login-error" id="login-error" aria-live="polite"></div>
+
+                        <button type="submit" class="btn-login" id="btn-login">
+                            <span>Masuk Sekarang</span>
+                            <span class="login-arrow" aria-hidden="true">→</span>
+                        </button>
+                    </form>
+
+                    <!-- Default Credentials Info -->
+                    <div class="login-hint">
+                        <div class="hint-title">Akses Demo</div>
+                        <div class="hint-grid">
+                            <div class="hint-item">
+                                <span class="hint-role">User</span>
+                                <span>kasir / kasir123</span>
+                            </div>
+                            <div class="hint-item">
+                                <span class="hint-role">Admin</span>
+                                <span>admin / admin123</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="login-footer">© 2026 Kasirkita — Sistem Kasir Sekolah</p>
+                </section>
+            </div>
+        </div>
+    </div>
+    
+    <script src="login.js"></script>
+</body>
+</html>

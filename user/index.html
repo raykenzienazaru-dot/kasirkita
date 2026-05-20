@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasirkita - User</title>
+    <meta name="description" content="Aplikasi kasir sekolah modern dengan fitur pembayaran QRIS, tunai, dan transfer bank.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- QR Code Library (no API, pure JS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <!-- ===== APP WRAPPER (hidden until login) ===== -->
+    <div class="app-wrapper" id="app-wrapper" style="display:none">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon"><i class="ti ti-building-store"></i></div>
+            <div class="logo-text">
+                <span class="logo-name">Kasirkita</span>
+                <span class="logo-sub">Sekolah Edition</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="javascript:void(0)" class="nav-item active" id="nav-kasir" onclick="showPage('kasir')">
+                <span class="nav-icon"><i class="ti ti-shopping-cart"></i></span>
+                <span>Kasir</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" id="nav-history" onclick="showPage('history')">
+                <span class="nav-icon"><i class="ti ti-receipt"></i></span>
+                <span>Riwayat</span>
+                <span class="badge" id="history-badge">0</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" id="nav-laporan" onclick="showPage('laporan')">
+                <span class="nav-icon"><i class="ti ti-chart-bar"></i></span>
+                <span>Laporan</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-session">
+                <div class="session-icon" id="session-icon"><i class="ti ti-user"></i></div>
+                <div class="session-info">
+                    <div class="session-name" id="session-name">User</div>
+                    <div class="session-role" id="session-role">Kasir</div>
+                </div>
+                <button class="logout-btn" onclick="handleLogout()" title="Keluar"><i class="ti ti-logout"></i></button>
+            </div>
+            <div class="store-info">
+                <div class="store-avatar"><i class="ti ti-school"></i></div>
+                <div>
+                    <div class="store-name" id="store-name-display">Kantin Sekolah</div>
+                    <div class="store-date" id="current-date"></div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- ===== PAGE: KASIR ===== -->
+        <div class="page active" id="page-kasir">
+
+            <!-- Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Point of Sale</h1>
+                    <p class="page-subtitle">Pilih barang dari data admin dan proses pembayaran</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-danger" onclick="resetKeranjang()" id="btn-reset"><i class="ti ti-refresh"></i>Reset</button>
+                </div>
+            </div>
+
+            <div class="kasir-layout">
+
+                <!-- LEFT: Catalog Input -->
+                <div class="input-panel">
+                    <div class="panel-card">
+                        <div class="panel-title">
+                            <span><i class="ti ti-package"></i>Barang dari Admin</span>
+                            <button class="btn btn-ghost btn-mini" onclick="refreshBarangAdmin()"><i class="ti ti-refresh"></i>Refresh</button>
+                        </div>
+
+                        <div class="catalog-toolbar">
+                            <div class="form-group">
+                                <label for="productSearch">Cari Barang</label>
+                                <input type="text" id="productSearch" placeholder="Nama atau kode barang" autocomplete="off" oninput="handleProductSearch(this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label for="productCategory">Kategori</label>
+                                <select id="productCategory" onchange="handleProductCategory(this.value)">
+                                    <option value="Semua">Semua Kategori</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="jumlahBarang">Jumlah</label>
+                            <div class="qty-control">
+                                <button class="qty-btn" onclick="ubahQty(-1)">−</button>
+                                <input type="number" id="jumlahBarang" placeholder="1" min="1" value="1">
+                                <button class="qty-btn" onclick="ubahQty(1)">+</button>
+                            </div>
+                        </div>
+
+                        <div class="catalog-summary" id="catalog-summary"></div>
+                        <div class="product-grid" id="product-grid">
+                            <div class="empty-state" style="padding:28px">
+                                <div class="empty-icon"><i class="ti ti-package"></i></div>
+                                <p>Memuat barang</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diskon & Catatan -->
+                    <div class="panel-card">
+                        <div class="panel-title"><i class="ti ti-rosette-discount"></i>Diskon &amp; Catatan</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="diskonPersen">Diskon (%)</label>
+                                <input type="number" id="diskonPersen" placeholder="0" min="0" max="100" oninput="hitungTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label for="diskonNominal">Diskon (Rp)</label>
+                                <input type="number" id="diskonNominal" placeholder="0" min="0" oninput="hitungTotal()">
+                            </div>
+                        </div>
+                        <!-- Info diskon otomatis -->
+                        <div class="auto-discount-info">
+                            <span class="info-icon"></span>
+                            <span>Diskon otomatis <strong>10%</strong> berlaku jika subtotal &gt; Rp 100.000</span>
+                        </div>
+                        <div class="ppn-info">
+                            <span class="info-icon"></span>
+                            <span>PPN <strong>11%</strong> ditambahkan ke total</span>
+                        </div>
+                        <div class="form-group" style="margin-top:12px">
+                            <label for="catatan">Catatan</label>
+                            <input type="text" id="catatan" placeholder="Catatan pesanan...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Cart & Checkout -->
+                <div class="cart-panel">
+
+                    <!-- Cart Table -->
+                    <div class="panel-card cart-card">
+                        <div class="panel-title">
+                            <span><i class="ti ti-shopping-cart"></i>Keranjang</span>
+                            <span class="item-count" id="item-count">0 item</span>
+                        </div>
+
+                        <div class="cart-wrapper">
+                            <table class="cart-table">
+                                <thead>
+                                    <tr>
+                                        <th>Barang</th>
+                                        <th>Harga</th>
+                                        <th>Qty</th>
+                                        <th>Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataKasir">
+                                    <tr class="empty-cart" id="empty-cart">
+                                        <td colspan="5">
+                                            <div class="empty-state">
+                                                <div class="empty-icon"><i class="ti ti-shopping-cart"></i></div>
+                                                <p>Keranjang masih kosong</p>
+                                                <small>Pilih barang dari katalog admin di sebelah kiri</small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Summary & Checkout -->
+                    <div class="panel-card checkout-card">
+                        <div class="summary-lines">
+                            <!-- Subtotal -->
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span id="subtotal-display">Rp 0</span>
+                            </div>
+
+                            <!-- Diskon Manual -->
+                            <div class="summary-row discount-row" id="discount-row" style="display:none">
+                                <span> Diskon Manual</span>
+                                <span id="diskon-display" class="text-green">- Rp 0</span>
+                            </div>
+
+                            <!-- Diskon Otomatis -->
+                            <div class="summary-row auto-discount-row" id="auto-discount-row" style="display:none">
+                                <span> Diskon Otomatis 10%</span>
+                                <span id="auto-diskon-display" class="text-green">- Rp 0</span>
+                            </div>
+
+                            <!-- PPN -->
+                            <div class="summary-row ppn-row" id="ppn-row" style="display:none">
+                                <span> PPN (11%)</span>
+                                <span id="ppn-display" class="text-yellow">Rp 0</span>
+                            </div>
+
+                            <div class="summary-divider"></div>
+
+                            <div class="summary-row total-row">
+                                <span>TOTAL</span>
+                                <span id="totalBelanja">Rp 0</span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Mode -->
+                        <div class="payment-section">
+                            <div class="payment-label">Mode Pembayaran</div>
+                            <div class="payment-tabs" id="payment-tabs">
+                                <button class="pay-tab active" data-method="tunai" onclick="pilihPembayaran('tunai')">
+                                    <span class="pay-icon"><i class="ti ti-cash"></i></span>
+                                    <span>Tunai</span>
+                                </button>
+                                <button class="pay-tab" data-method="transfer" onclick="pilihPembayaran('transfer')">
+                                    <span class="pay-icon"><i class="ti ti-building-bank"></i></span>
+                                    <span>Transfer</span>
+                                </button>
+                                <button class="pay-tab" data-method="qris" onclick="pilihPembayaran('qris')">
+                                    <span class="pay-icon"><i class="ti ti-qrcode"></i></span>
+                                    <span>QRIS</span>
+                                </button>
+                            </div>
+
+                            <!-- Tunai Panel -->
+                            <div class="pay-panel active" id="panel-tunai">
+                                <div class="form-group">
+                                    <label>Uang Diterima (Rp)</label>
+                                    <input type="number" id="uangDiterima" placeholder="0" oninput="hitungKembalian()">
+                                </div>
+                                <div class="kembalian-display" id="kembalian-display">
+                                    <span class="kembalian-label">Kembalian</span>
+                                    <span class="kembalian-value" id="kembalian-value">Rp 0</span>
+                                </div>
+                                <div class="quick-cash" id="quick-cash"></div>
+                            </div>
+
+                            <!-- Transfer Panel -->
+                            <div class="pay-panel" id="panel-transfer">
+                                <div class="transfer-info">
+                                    <div class="bank-selector">
+                                        <label>Pilih Bank</label>
+                                        <div class="bank-options">
+                                            <button class="bank-btn active" onclick="pilihBank(this, 'BRI')" data-bank="BRI">BRI</button>
+                                            <button class="bank-btn" onclick="pilihBank(this, 'BCA')" data-bank="BCA">BCA</button>
+                                            <button class="bank-btn" onclick="pilihBank(this, 'Mandiri')" data-bank="Mandiri">Mandiri</button>
+                                            <button class="bank-btn" onclick="pilihBank(this, 'BNI')" data-bank="BNI">BNI</button>
+                                        </div>
+                                    </div>
+                                    <div class="account-info" id="account-info">
+                                        <div class="account-row">
+                                            <span>No. Rekening</span>
+                                            <span class="account-num" id="account-num">1234-5678-9012</span>
+                                        </div>
+                                        <div class="account-row">
+                                            <span>Atas Nama</span>
+                                            <span id="account-name">Kantin Sekolah</span>
+                                        </div>
+                                        <div class="account-row">
+                                            <span>Jumlah Transfer</span>
+                                            <span class="highlight-amount" id="transfer-amount">Rp 0</span>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-ghost btn-full" onclick="salinNoRekening()"><i class="ti ti-copy"></i>Salin No. Rekening</button>
+                                </div>
+                            </div>
+
+                            <!-- QRIS Panel -->
+                            <div class="pay-panel" id="panel-qris">
+                                <div class="qris-container">
+                                    <div class="qris-header">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/QRIS_logo.svg/200px-QRIS_logo.svg.png" alt="QRIS" class="qris-logo">
+                                        <div class="qris-amount" id="qris-amount">Rp 0</div>
+                                    </div>
+                                    <div class="qr-wrapper">
+                                        <div id="qrcode-display"></div>
+                                    </div>
+                                    <p class="qris-note">Scan QR Code dengan aplikasi e-wallet apapun</p>
+                                    <div class="qris-logos">
+                                        <span>GoPay</span>
+                                        <span>OVO</span>
+                                        <span>Dana</span>
+                                        <span>ShopeePay</span>
+                                        <span>LinkAja</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-checkout" onclick="prosesTransaksi()" id="btn-checkout">
+                            Proses Transaksi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PAGE: HISTORY ===== -->
+        <div class="page" id="page-history">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Riwayat Transaksi</h1>
+                    <p class="page-subtitle">Semua transaksi yang telah diproses</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-ghost" onclick="exportCSV()"><i class="ti ti-download"></i>Export CSV</button>
+                </div>
+            </div>
+
+            <div class="history-stats" id="history-stats"></div>
+            <div class="history-list" id="history-list">
+                <div class="empty-state" style="padding:60px">
+                    <div class="empty-icon"><i class="ti ti-receipt-off"></i></div>
+                    <p>Belum ada transaksi</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PAGE: LAPORAN ===== -->
+        <div class="page" id="page-laporan">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Laporan Penjualan</h1>
+                    <p class="page-subtitle">Ringkasan performa penjualan hari ini</p>
+                </div>
+            </div>
+
+            <div class="stats-grid" id="stats-grid"></div>
+            <div class="chart-section">
+                <div class="panel-card">
+                    <div class="panel-title"><i class="ti ti-chart-bar"></i>Penjualan per Kategori</div>
+                    <div class="chart-bars" id="chart-bars"></div>
+                </div>
+                <div class="panel-card">
+                    <div class="panel-title"><i class="ti ti-credit-card"></i>Metode Pembayaran</div>
+                    <div class="payment-chart" id="payment-chart"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL: Struk -->
+    <div class="modal-overlay" id="modal-struk" onclick="closeStruk(event)">
+        <div class="modal-box struk-box" id="struk-content">
+            <div class="struk-header">
+                <div class="struk-logo"><i class="ti ti-building-store"></i></div>
+                <h2 class="struk-store" id="struk-store-name">Kantin Sekolah</h2>
+                <p class="struk-tagline">Terima kasih telah berbelanja!</p>
+                <div class="struk-divider">— — — — — — — — — — — —</div>
+            </div>
+            <div class="struk-meta">
+                <div class="struk-row">
+                    <span>No. Transaksi</span>
+                    <span id="struk-no">#TRX-001</span>
+                </div>
+                <div class="struk-row">
+                    <span>Tanggal</span>
+                    <span id="struk-tanggal"></span>
+                </div>
+                <div class="struk-row">
+                    <span>Kasir</span>
+                    <span id="struk-kasir">Admin</span>
+                </div>
+                <div class="struk-row">
+                    <span>Pembayaran</span>
+                    <span id="struk-metode"></span>
+                </div>
+            </div>
+            <div class="struk-divider">— — — — — — — — — — — —</div>
+            <div id="struk-items"></div>
+            <div class="struk-divider">— — — — — — — — — — — —</div>
+            <div id="struk-summary"></div>
+            <div class="struk-footer">
+                <p>Barang yang sudah dibeli</p>
+                <p>tidak dapat dikembalikan</p>
+                <div class="struk-barcode">||||| || ||| || |||||||| ||</div>
+            </div>
+            <div class="struk-actions">
+                <button class="btn btn-ghost" onclick="printStruk()"><i class="ti ti-printer"></i>Print</button>
+                <button class="btn btn-primary" onclick="closeStruk()"><i class="ti ti-check"></i>Selesai</button>
+            </div>
+        </div>
+    </div>
+
+
+    </div><!-- /app-wrapper -->
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+      // Session check — redirect to login if not user role
+      const saved = sessionStorage.getItem('currentUser');
+      if (!saved) {
+        window.location.replace('../login.html');
+      } else {
+        try {
+          const user = JSON.parse(saved);
+          if (user.role !== 'user') {
+            sessionStorage.removeItem('currentUser');
+            window.location.replace('../login.html');
+          }
+        } catch (e) {
+          sessionStorage.removeItem('currentUser');
+          window.location.replace('../login.html');
+        }
+      }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
