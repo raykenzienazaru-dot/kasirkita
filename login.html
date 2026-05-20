@@ -4,156 +4,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Kasirkita</title>
-    <meta name="description" content="Masuk ke aplikasi kasir sekolah modern.">
+    <meta name="description" content="Masuk ke aplikasi Kasirkita - Sistem Kasir & Manajemen.">
+    
+    <!-- Google Fonts: Plus Jakarta Sans for high-end modern typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="style.css">
+    
     <!-- Supabase JS Client & Global Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
 </head>
 <body>
 
-    <!-- ===== LOGIN SCREEN ===== -->
+    <!-- ===== DECORATIVE BACKGROUND WATERMARKS ===== -->
+    <div class="login-bg-watermarks" aria-hidden="true">
+        <!-- Left Side Watermark: Desk Lamp, Monitor, Plant -->
+        <svg class="watermark watermark-left" viewBox="0 0 300 300" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Desk base line -->
+            <line x1="10" y1="280" x2="290" y2="280" />
+            <!-- Desk Lamp -->
+            <path d="M50 280 c0-40 20-70 50-70" />
+            <line x1="100" y1="210" x2="70" y2="140" />
+            <path d="M55 140 h30 l15 40 h-60 z" />
+            <!-- Monitor -->
+            <rect x="130" y="160" width="100" height="70" rx="6" />
+            <path d="M180 230 v40" />
+            <path d="M160 270 h40" />
+            <!-- Small Plant -->
+            <path d="M260 250 h20 l-5 30 h-10 z" />
+            <path d="M270 250 c-5-15 0-30 5-35 c5 5 10 20 5 35" fill="currentColor" opacity="0.15" />
+            <path d="M270 250 c-10-10-10-25-5-30 c5 5 5 20 5 30" fill="currentColor" opacity="0.15" />
+        </svg>
+
+        <!-- Right Side Watermark: Clock, Shelf, Folders, Plant -->
+        <svg class="watermark watermark-right" viewBox="0 0 300 300" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Clock -->
+            <circle cx="150" cy="80" r="30" />
+            <line x1="150" y1="80" x2="150" y2="65" />
+            <line x1="150" y1="80" x2="165" y2="80" />
+            <!-- Bookshelf -->
+            <rect x="70" y="130" width="160" height="150" rx="6" />
+            <line x1="70" y1="180" x2="230" y2="180" />
+            <line x1="70" y1="230" x2="230" y2="230" />
+            <!-- Folders -->
+            <rect x="85" y="145" width="14" height="30" rx="1" />
+            <circle cx="92" cy="168" r="2" fill="currentColor" />
+            <rect x="102" y="145" width="14" height="30" rx="1" />
+            <circle cx="109" cy="168" r="2" fill="currentColor" />
+            <rect x="119" y="145" width="14" height="30" rx="1" />
+            <circle cx="126" cy="168" r="2" fill="currentColor" />
+            <!-- Potted Plant -->
+            <path d="M140 215 h20 l-3 15 h-14 z" />
+            <path d="M150 215 c-5-15-5-25 0-30 c5 5 5 15 0 30" fill="currentColor" opacity="0.15"/>
+            <path d="M148 215 c-10-8-12-20-5-25 c5 5 5 15 5 25" fill="currentColor" opacity="0.15"/>
+            <path d="M152 215 c10-8 12-20 5-25 c-5 5-5 15-5 25" fill="currentColor" opacity="0.15"/>
+        </svg>
+    </div>
+
+    <!-- ===== MAIN LOGIN LAYOUT ===== -->
     <div class="login-screen" id="login-screen">
-        <div class="login-bg-grid" aria-hidden="true"></div>
-        <div class="login-bg-panels" aria-hidden="true">
-            <span class="panel panel-1"></span>
-            <span class="panel panel-2"></span>
-            <span class="panel panel-3"></span>
-        </div>
+        <div class="login-wrapper">
+            
+            <!-- Branding Header -->
+            <header class="login-header">
+                <div class="brand-logo">
+                    <!-- SVG Keranjang Belanja Kustom Sesuai Gambar -->
+                    <svg class="login-logo-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Tilted Document inside -->
+                        <rect x="52" y="16" width="34" height="46" rx="4" transform="rotate(8 69 39)" fill="#ffffff" stroke="#228b55" stroke-width="5"/>
+                        <path d="M58 30h18M57 38h18M56 46h10" stroke="#35c283" stroke-width="3.5" stroke-linecap="round" transform="rotate(8 69 39)"/>
+                        
+                        <!-- Shopping Cart Body & Frame -->
+                        <path d="M18 28h14l12 42h44l10-34H38" fill="none" stroke="#228b55" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <!-- Wheels -->
+                        <circle cx="48" cy="84" r="9" fill="#228b55"/>
+                        <circle cx="78" cy="84" r="9" fill="#228b55"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1 class="brand-title"><span class="txt-dark">KASIR</span><span class="txt-light">KITA</span></h1>
+                    <p class="brand-tagline">Sistem Kasir & Manajemen</p>
+                    <p class="brand-subtagline">Untuk Bisnis Anda</p>
+                </div>
+            </header>
 
-        <div class="login-container">
-            <div class="login-card">
-                <section class="login-hero" aria-label="Kasirkita overview">
-                    <div class="brand-lockup">
-                        <div class="login-logo-icon" aria-hidden="true">🏪</div>
-                        <div>
-                            <h1 class="login-brand">Kasirkita</h1>
-                            <p class="login-tagline">Sekolah Edition Point of Sale</p>
-                        </div>
+            <!-- Login Card -->
+            <main class="login-card-container">
+                <div class="login-card">
+                    
+                    <div class="login-card-head">
+                        <h2>Selamat Datang</h2>
+                        <p>Silakan masuk untuk melanjutkan</p>
                     </div>
 
-                    <div class="hero-copy">
-                        <p class="hero-kicker">Sistem Kasir Sekolah</p>
-                        <h2>Kelola transaksi kantin dengan cepat, rapi, dan modern.</h2>
-                        <p>Masuk sesuai peran untuk mulai mencatat penjualan, melihat laporan, dan menjaga operasional tetap tertata.</p>
-                    </div>
-
-                    <div class="dashboard-preview" aria-hidden="true">
-                        <div class="preview-topbar">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                        <div class="preview-body">
-                            <div class="preview-summary">
-                                <span>Transaksi Hari Ini</span>
-                                <strong>Rp 1.250.000</strong>
-                            </div>
-                            <div class="preview-chart">
-                                <span style="height: 42%"></span>
-                                <span style="height: 78%"></span>
-                                <span style="height: 58%"></span>
-                                <span style="height: 88%"></span>
-                                <span style="height: 66%"></span>
-                            </div>
-                            <div class="preview-list">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="hero-stats" aria-label="Ringkasan aplikasi">
-                        <div>
-                            <strong>2</strong>
-                            <span>Mode akses</span>
-                        </div>
-                        <div>
-                            <strong>24/7</strong>
-                            <span>Siap pakai</span>
-                        </div>
-                        <div>
-                            <strong>POS</strong>
-                            <span>Kasir sekolah</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="login-panel" aria-label="Form login">
-                    <div class="login-panel-head">
-                        <p class="panel-kicker">Selamat datang</p>
-                        <h2>Masuk ke dashboard</h2>
-                        <p>Pilih peran, lalu gunakan akun yang sudah disiapkan.</p>
-                    </div>
-
-                    <!-- Role Selector -->
+                    <!-- Role Tab Selector -->
                     <div class="role-selector">
-                        <div class="role-label">Masuk Sebagai</div>
                         <div class="role-tabs">
                             <button type="button" class="role-tab active" id="role-user" aria-pressed="true" onclick="selectRole('user')">
-                                <span class="role-icon" aria-hidden="true">👤</span>
-                                <span class="role-name">User</span>
-                                <span class="role-desc">Kasir / Petugas</span>
+                                <span class="role-tab-icon">
+                                    <!-- User Icon -->
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                </span>
+                                <span class="role-tab-name">User</span>
                             </button>
                             <button type="button" class="role-tab" id="role-admin" aria-pressed="false" onclick="selectRole('admin')">
-                                <span class="role-icon" aria-hidden="true">🛡️</span>
-                                <span class="role-name">Admin</span>
-                                <span class="role-desc">Manajemen Penuh</span>
+                                <span class="role-tab-icon">
+                                    <!-- Shield/Admin Icon -->
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    </svg>
+                                </span>
+                                <span class="role-tab-name">Admin</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Login Form -->
+                    <!-- Form Login -->
                     <form class="login-form" id="login-form" onsubmit="handleLogin(event)">
+                        <!-- Username Field -->
                         <div class="login-field">
                             <label for="login-username">Username</label>
                             <div class="field-wrapper">
-                                <span class="field-icon" aria-hidden="true">👤</span>
-                                <input type="text" id="login-username" name="username" placeholder="Masukkan username" autocomplete="username" required>
+                                <span class="field-icon">
+                                    <!-- User Outline Icon -->
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                </span>
+                                <input type="text" id="login-username" name="username" placeholder="Masukkan username Anda" autocomplete="username" required>
                             </div>
                         </div>
+
+                        <!-- Password Field -->
                         <div class="login-field">
                             <label for="login-password">Password</label>
                             <div class="field-wrapper">
-                                <span class="field-icon" adminaria-hidden="true">🔒</span>
-                                <input type="password" id="login-password" name="password" placeholder="Masukkan password" autocomplete="current-password" required>
-                                <button type="button" class="toggle-pass" id="toggle-pass" aria-label="Tampilkan password" onclick="togglePassword()">👁️</button>
+                                <span class="field-icon">
+                                    <!-- Lock Outline Icon -->
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                    </svg>
+                                </span>
+                                <input type="password" id="login-password" name="password" placeholder="Masukkan password Anda" autocomplete="current-password" required>
+                                <button type="button" class="toggle-pass" id="toggle-pass" aria-label="Tampilkan password" onclick="togglePassword()">
+                                    <!-- Eye Icon SVG for higher premium styling -->
+                                    <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
 
+                        <!-- Error Message Alert -->
                         <div class="login-error" id="login-error" aria-live="polite"></div>
 
+                        <!-- Submit Button -->
                         <button type="submit" class="btn-login" id="btn-login">
-                            <span>Masuk Sekarang</span>
-                            <span class="login-arrow" aria-hidden="true">→</span>
+                            <span>Masuk</span>
+                            <span class="login-arrow" aria-hidden="true">
+                                <!-- Modern Sign-In SVG Icon -->
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+                                </svg>
+                            </span>
                         </button>
                     </form>
 
-                    <!-- Default Credentials Info -->
-                    <div class="login-hint">
-                        <div class="hint-title">Akses Demo</div>
-                        <div class="hint-grid">
-                            <div class="hint-item">
-                                <span class="hint-role">User</span>
-                                <span>kasir / kasir123</span>
-                            </div>
-                            <div class="hint-item">
-                                <span class="hint-role">Admin</span>
-                                <span>admin / admin123</span>
-                            </div>
-                        </div>
+                    <!-- Footer Link -->
+                    <div class="login-card-footer">
+                        <p>Lupa password? <a href="#" class="btn-link" onclick="alert('Hubungi admin sekolah untuk mereset kata sandi Anda.')">Hubungi administrator</a></p>
                     </div>
 
-                    <p class="login-footer">© 2026 Kasirkita — Sistem Kasir Sekolah</p>
-                </section>
-            </div>
+                </div>
+            </main>
+
         </div>
     </div>
-    
+
+    <!-- ===== BOTTOM DECORATIVE WAVY LAYERS ===== -->
+    <div class="login-waves-container" aria-hidden="true">
+        <!-- Wave 1 (Top Wave: Lightest Green) -->
+        <svg class="login-wave wave-top" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,110 C240,165 480,175 720,135 C960,95 1200,65 1440,90 L1440,180 L0,180 Z" fill="#68c795" opacity="0.35"/>
+        </svg>
+        <!-- Wave 2 (Middle Wave: Medium Green) -->
+        <svg class="login-wave wave-mid" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,90 C300,150 600,135 900,105 C1140,80 1320,70 1440,80 L1440,180 L0,180 Z" fill="#45b078" opacity="0.65"/>
+        </svg>
+        <!-- Wave 3 (Front Wave: Deepest Green) -->
+        <svg class="login-wave wave-front" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,75 C240,130 480,120 720,90 C960,60 1200,50 1440,65 L1440,180 L0,180 Z" fill="#228b55"/>
+        </svg>
+    </div>
+
     <script src="login.js"></script>
 </body>
 </html>
