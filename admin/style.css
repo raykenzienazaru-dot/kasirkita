@@ -175,7 +175,7 @@ button, input, select, textarea { font: inherit; }
 .sidebar-link:hover { background: rgba(255,255,255,0.06); color: #c8d8ec; }
 
 .sidebar-link.active {
-  background: rgba(59,130,246,0.18);
+  background: rgba(34,197,94,0.18);
   color: #fff;
 }
 
@@ -185,9 +185,10 @@ button, input, select, textarea { font: inherit; }
   left: 0; top: 50%;
   transform: translateY(-50%);
   width: 3px; height: 20px;
-  background: var(--accent-blue);
+  background: var(--accent-green);
   border-radius: 0 3px 3px 0;
 }
+
 
 .sidebar-account {
   padding: 12px 16px;
@@ -286,7 +287,8 @@ button, input, select, textarea { font: inherit; }
   transition: all 0.15s;
   box-shadow: var(--shadow-sm);
 }
-.topbar-notif-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+.topbar-notif-btn:hover { border-color: var(--accent-green); color: var(--accent-green); }
+
 
 .notif-badge {
   position: absolute; top: -4px; right: -4px;
@@ -311,7 +313,8 @@ button, input, select, textarea { font: inherit; }
   transition: all 0.15s;
   box-shadow: var(--shadow-sm);
 }
-.topbar-user:hover { border-color: var(--accent-blue); }
+.topbar-user:hover { border-color: var(--accent-green); }
+
 
 .topbar-avatar {
   width: 30px; height: 30px;
@@ -446,7 +449,7 @@ button, input, select, textarea { font: inherit; }
 .panel-link {
   font-size: 12px;
   font-weight: 600;
-  color: var(--accent-blue);
+  color: var(--accent-green);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -455,6 +458,7 @@ button, input, select, textarea { font: inherit; }
   cursor: pointer;
   padding: 0;
 }
+
 .panel-link:hover { text-decoration: underline; }
 
 /* ========================
@@ -518,7 +522,8 @@ button, input, select, textarea { font: inherit; }
   cursor: pointer;
   transition: all 0.15s;
 }
-.chart-filter-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+.chart-filter-btn:hover { border-color: var(--accent-green); color: var(--accent-green); }
+
 
 /* ========================
    DONUT / PIE CHART
@@ -659,12 +664,13 @@ button, input, select, textarea { font: inherit; }
 .btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 
 .btn-primary {
-  background: var(--accent-blue);
+  background: var(--accent-green);
   color: white;
-  border-color: var(--accent-blue);
-  box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+  border-color: var(--accent-green);
+  box-shadow: 0 2px 8px rgba(34,197,94,0.28);
 }
-.btn-primary:hover { background: #2563eb; border-color: #2563eb; box-shadow: 0 4px 14px rgba(59,130,246,0.4); }
+.btn-primary:hover { background: var(--green-dark, #165f37); border-color: var(--green-dark, #165f37); box-shadow: 0 4px 14px rgba(34,197,94,0.38); }
+
 
 .btn-danger { background: var(--accent-red); color: white; border-color: var(--accent-red); }
 .btn-danger:hover { background: #dc2626; border-color: #dc2626; }
@@ -689,7 +695,8 @@ button, input, select, textarea { font: inherit; }
   transition: all 0.15s;
   padding: 0;
 }
-.icon-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: var(--accent-blue-light); }
+ .icon-btn:hover { border-color: var(--accent-green); color: var(--accent-green); background: var(--accent-green-light); }
+
 
 /* ========================
    FORM / INPUTS
@@ -704,7 +711,8 @@ button, input, select, textarea { font: inherit; }
   font-size: 13px;
   transition: all 0.15s;
 }
-.input:focus { outline: none; border-color: var(--accent-blue); background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.input:focus { outline: none; border-color: var(--accent-green); background: white; box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
+
 .input::placeholder { color: var(--text-muted); }
 
 select.input { cursor: pointer; }
@@ -777,7 +785,8 @@ select.input { cursor: pointer; }
   box-shadow: var(--shadow-sm);
   color: inherit;
 }
-.transaction-card:hover { border-color: var(--accent-blue); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.transaction-card:hover { border-color: var(--accent-green); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
 
 .transaction-icon {
   width: 42px; height: 42px; flex: 0 0 auto;
@@ -786,7 +795,8 @@ select.input { cursor: pointer; }
   font-size: 18px;
 }
 
-.method-tunai { background: var(--accent-blue-light); color: var(--accent-blue); }
+.method-tunai { background: var(--accent-green-light); color: var(--accent-green); }
+
 .method-qris { background: var(--accent-purple-light); color: var(--accent-purple); }
 .method-transfer { background: #fce7f3; color: #be185d; }
 
@@ -906,8 +916,10 @@ select.input { cursor: pointer; }
   font-weight: 600;
   transition: all 0.15s;
 }
-.chip:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: var(--accent-blue-light); }
-.chip.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+.chip:hover { border-color: var(--accent-green); color: var(--accent-green); background: var(--accent-green-light); }
+
+.chip.active { background: var(--accent-green); color: white; border-color: var(--accent-green); }
+
 
 /* ========================
    MINI STAT GRID
@@ -1151,6 +1163,8 @@ select.input { cursor: pointer; }
   .admin-topbar { padding: 0 16px 0 68px; }
   .metric-grid { grid-template-columns: 1fr 1fr; }
   .laporan-metric-row { grid-template-columns: 1fr 1fr; }
+
+  /* Mobile: sidebar always behaves like an off-canvas menu */
   .admin-sidebar {
     position: fixed !important; top: 0 !important; left: 0 !important; bottom: 0 !important;
     height: 100vh !important; width: 260px !important;
@@ -1159,18 +1173,36 @@ select.input { cursor: pointer; }
     z-index: 1000 !important;
     box-shadow: var(--shadow-lg);
   }
+
+  /* Ensure sidebar-collapsed state does NOT override off-canvas behavior */
   .sidebar-collapsed .admin-sidebar { width: 260px !important; transform: translateX(-100%) !important; }
+
   .sidebar-collapsed .brand-text,
   .sidebar-collapsed .account-text,
   .sidebar-collapsed .sidebar-link span,
   .sidebar-collapsed .logout-btn span,
   .sidebar-collapsed .sidebar-section-label { display: block !important; }
+
   .sidebar-collapsed .sidebar-toggle { display: none !important; }
+
   .sidebar-collapsed .sidebar-brand,
   .sidebar-collapsed .sidebar-account { padding-left: 16px !important; padding-right: 16px !important; }
+
   .sidebar-collapsed .sidebar-link,
   .sidebar-collapsed .logout-btn { justify-content: flex-start !important; }
+
   .admin-shell.sidebar-open .admin-sidebar { transform: translateX(0) !important; }
+
+  /* Overlay only when open */
+  .sidebar-overlay { display: none; }
+  .admin-shell.sidebar-open .sidebar-overlay {
+    display: block !important;
+    position: fixed; inset: 0;
+    background: rgba(13,27,42,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+  }
+
   .mobile-burger-btn {
     display: flex !important; align-items: center; justify-content: center;
     position: fixed; top: 16px; left: 16px;
@@ -1184,13 +1216,8 @@ select.input { cursor: pointer; }
     z-index: 998;
     box-shadow: var(--shadow-md);
   }
-  .admin-shell.sidebar-open .sidebar-overlay {
-    display: block !important;
-    position: fixed; inset: 0;
-    background: rgba(13,27,42,0.6);
-    backdrop-filter: blur(4px);
-    z-index: 999;
-  }
+
   .page-head { flex-direction: column; align-items: stretch; }
   .filter-bar .input, .compact-input { width: 100%; }
 }
+
