@@ -926,6 +926,7 @@ function renderLaporanHarian() {
 
     ${filtered.length ? `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+      <div class="laporan-2col-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
         <div class="panel">
           <div class="panel-header"><h3>Penjualan per Kategori</h3></div>
           <div class="panel-body">
