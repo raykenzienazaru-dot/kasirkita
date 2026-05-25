@@ -125,6 +125,7 @@ const state = {
   trxs: [],
   items: [],
   sidebarOpen: true,
+  chartRange: "7",
   qrReady: false,
   toasts: [],
   chart: null,
@@ -143,7 +144,14 @@ const state = {
 function loadCurrentUser() {
   const saved = sessionStorage.getItem("currentUser");
   if (!saved) return null;
-  try { return JSON.parse(saved); } catch { sessionStorage.removeItem("currentUser"); return null; }
+  try {
+    const parsed = JSON.parse(saved);
+    if (parsed && parsed.role) parsed.role = String(parsed.role).toLowerCase();
+    return parsed;
+  } catch {
+    sessionStorage.removeItem("currentUser");
+    return null;
+  }
 }
 
 function loadTransactions() {
@@ -465,8 +473,10 @@ function renderDashboard() {
   const totalKat = Object.values(katMap).reduce((a, b) => a + b, 0);
 
   // Build sparkline data (last 7 days totals)
+  // Build sparkline data (last N days totals)
+  const daysForSpark = Number(state.chartRange) || 7;
   const sparkData = [];
-  for (let i = 6; i >= 0; i--) {
+  for (let i = daysForSpark - 1; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
     const ds = d.toDateString();
     sparkData.push(state.trxs.filter(t => new Date(t.tanggal).toDateString() === ds).reduce((s, t) => s + t.total, 0));
@@ -499,8 +509,8 @@ function renderDashboard() {
                   <div class="legend-dot" style="background:#a855f7"></div> Transaksi
                 </div>
               </div>
-              <button class="chart-filter-btn">
-                7 Hari Terakhir <i class="ti ti-chevron-down" style="font-size:12px"></i>
+              <button class="chart-filter-btn" data-action="toggle-chart-range" title="Ubah rentang grafik">
+                ${state.chartRange === "7" ? "7 Hari Terakhir" : "30 Hari Terakhir"} <i class="ti ti-chevron-down" style="font-size:12px"></i>
               </button>
             </div>
           </div>
@@ -637,11 +647,15 @@ function renderDashboardLineChart() {
   const dataRevenue = [];
   const dataCount = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    labels.push(d.toLocaleDateString("id-ID", { day:"2-digit", month:"short" }));
-    const dayTrxs = state.trxs.filter(t => new Date(t.tanggal).toDateString() === d.toDateString());
-    dataRevenue.push(dayTrxs.reduce((s, t) => s + t.total, 0));
-    dataCount.push(dayTrxs.length);
+    const days = Number(state.chartRange) || 7;
+    for (let j = days - 1; j >= 0; j--) {
+      const d = new Date(); d.setDate(d.getDate() - j);
+      labels.push(d.toLocaleDateString("id-ID", { day:"2-digit", month:"short" }));
+      const dayTrxs = state.trxs.filter(t => new Date(t.tanggal).toDateString() === d.toDateString());
+      dataRevenue.push(dayTrxs.reduce((s, t) => s + t.total, 0));
+      dataCount.push(dayTrxs.length);
+    }
+    break;
   }
 
   state.chart = new window.Chart(canvas.getContext("2d"), {
@@ -1411,6 +1425,7 @@ function handleActionClick(event) {
     case "open-add-item": openAddItem(); break;
     case "open-edit-item": openEditItem(target.dataset.id); break;
     case "delete-item": deleteItem(target.dataset.id); break;
+    case "toggle-chart-range": state.chartRange = state.chartRange === "7" ? "30" : "7", render(); break;
     case "pay-method": state.pembayaran.method = target.dataset.method || "semua"; render(); break;
     case "qr-kategori": state.qrKategori = target.dataset.kategori || "Semua"; render(); break;
     case "download-qr": downloadQr(target.dataset.id); break;

@@ -106,10 +106,10 @@ async function handleLogin(e) {
       if (!error && data.user) {
         const metadata = data.user.user_metadata || {};
         // Ambil data role dan profile dari metadata Supabase
-        const userRole = metadata.role || selectedRole;
+        const userRole = (metadata.role || selectedRole);
         
         currentUser = {
-          role: userRole,
+          role: String(userRole).toLowerCase(),
           username: username,
           displayName: metadata.displayName || (userRole === 'admin' ? 'Administrator' : 'Kasir'),
           roleName: metadata.roleName || (userRole === 'admin' ? 'Admin — Manajemen Penuh' : 'Kasir / Petugas'),
