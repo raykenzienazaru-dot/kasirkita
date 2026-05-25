@@ -1425,7 +1425,6 @@ function handleActionClick(event) {
     case "open-add-item": openAddItem(); break;
     case "open-edit-item": openEditItem(target.dataset.id); break;
     case "delete-item": deleteItem(target.dataset.id); break;
-    case "toggle-chart-range": state.chartRange = state.chartRange === "7" ? "30" : "7", render(); break;
     case "pay-method": state.pembayaran.method = target.dataset.method || "semua"; render(); break;
     case "qr-kategori": state.qrKategori = target.dataset.kategori || "Semua"; render(); break;
     case "download-qr": downloadQr(target.dataset.id); break;
